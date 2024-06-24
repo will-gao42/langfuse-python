@@ -750,13 +750,17 @@ class LangchainCallbackHandler(
     ) -> Any:
         try:
             self._log_debug_event("on_llm_error", run_id, parent_run_id, error=error)
-            self.runs[run_id] = self.runs[run_id].end(
-                status_message=str(error),
-                level="ERROR",
-                version=self.version,
-                input=kwargs.get("inputs"),
-            )
-            self._update_trace_and_remove_state(run_id, parent_run_id, error)
+            if run_id not in self.runs:
+                raise Exception("Run not found for on_llm_error.")
+            
+            run_list = self.runs.copy()
+            for run in run_list:
+                self.runs[run].end(
+                    status_message=str(error),
+                    level="ERROR",
+                    version=self.version,
+                    input=kwargs.get("inputs"),
+                )
 
         except Exception as e:
             self.log.exception(e)
